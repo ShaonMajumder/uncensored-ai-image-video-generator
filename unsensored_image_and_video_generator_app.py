@@ -19,14 +19,14 @@ try:
     from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSize
     from PyQt5.QtGui import QPixmap, QFont, QColor, QPalette
 except ImportError:
-    print("Установите PyQt5: pip install PyQt5")
+    print("Install PyQt5: pip install PyQt5")
     sys.exit(1)
 
 try:
     from PIL import Image, ImageDraw, ImageFont
     import requests
 except ImportError:
-    print("Установите требуемые библиотеки: pip install pillow requests")
+    print("Install required libraries: pip install pillow requests")
     sys.exit(1)
 
 
@@ -70,19 +70,19 @@ class SafetyFilter:
         
         if filters.get('nsfw', True):
             if SafetyFilter.NSFW_KEYWORDS & words:
-                return False, "NSFW контент запрещен"
+                return False, "NSFW content is blocked"
         
         if filters.get('violence', True):
             if SafetyFilter.VIOLENCE_KEYWORDS & words:
-                return False, "Контент с насилием запрещен"
+                return False, "Violent content is blocked"
         
         if filters.get('hate', True):
             if SafetyFilter.HATE_KEYWORDS & words:
-                return False, "Ненавистный контент запрещен"
+                return False, "Hateful content is blocked"
         
         if filters.get('illegal', True):
             if SafetyFilter.ILLEGAL_KEYWORDS & words:
-                return False, "Незаконный контент запрещен"
+                return False, "Illegal content is blocked"
         
         return True, "OK"
 
@@ -103,7 +103,7 @@ class ImageGeneratorWorker(QThread):
     def run(self):
         """Генерация изображения"""
         try:
-            self.progress.emit("Генерируем изображение...")
+            self.progress.emit("Generating image...")
             
             # Создаем выходную директорию
             output_dir = Path.home() / "Pictures" / "ImageGenerator"
@@ -115,10 +115,10 @@ class ImageGeneratorWorker(QThread):
             if img_path:
                 self.finished.emit(str(img_path))
             else:
-                self.error.emit("Ошибка при генерации изображения")
+                self.error.emit("Image generation failed")
                 
         except Exception as e:
-            self.error.emit(f"Ошибка: {str(e)}")
+            self.error.emit(f"Error: {str(e)}")
     
     def _generate_image(self, output_dir):
         """Создание изображения"""
@@ -137,11 +137,11 @@ class ImageGeneratorWorker(QThread):
             filename = output_dir / f"image_{timestamp}.png"
             img.save(filename)
             
-            self.progress.emit(f"✅ Изображение сохранено: {filename}")
+            self.progress.emit(f"Image saved: {filename}")
             return filename
             
         except Exception as e:
-            self.error.emit(f"Ошибка генерации: {str(e)}")
+            self.error.emit(f"Generation error: {str(e)}")
             return None
     
     def _create_generative_image(self, prompt, style, size):
@@ -276,7 +276,7 @@ class ImageGeneratorApp(QMainWindow):
         
     def init_ui(self):
         """Инициализация интерфейса"""
-        self.setWindowTitle("🎨 Image Generator Pro")
+        self.setWindowTitle("Image Generator Pro")
         self.setGeometry(100, 100, 1200, 700)
         
         # Общий стиль
@@ -306,28 +306,28 @@ class ImageGeneratorApp(QMainWindow):
         layout.setSpacing(10)
         
         # Заголовок
-        title = QLabel("⚙️ Параметры")
+        title = QLabel("Settings")
         title.setFont(QFont('Arial', 14, QFont.Bold))
         layout.addWidget(title)
         
         # Уведомление о безопасности
         safety_info = QFrame()
         safety_layout = QVBoxLayout(safety_info)
-        safety_msg = QLabel("🛡️ Безопасность: Все запросы проверяются на соответствие фильтрам безопасности")
+        safety_msg = QLabel("Safety: Prompts are checked against the selected safety filters")
         safety_msg.setWordWrap(True)
         safety_msg.setStyleSheet("color: #93c5fd; background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 5px;")
         safety_layout.addWidget(safety_msg)
         layout.addWidget(safety_info)
         
         # Описание изображения
-        layout.addWidget(QLabel("Описание изображения:"))
+        layout.addWidget(QLabel("Image prompt:"))
         self.prompt_input = QTextEdit()
-        self.prompt_input.setPlaceholderText("Опишите, какое изображение вы хотите сгенерировать...")
+        self.prompt_input.setPlaceholderText("Describe the image you want to generate...")
         self.prompt_input.setMaximumHeight(120)
         layout.addWidget(self.prompt_input)
         
         # Стиль
-        layout.addWidget(QLabel("Стиль:"))
+        layout.addWidget(QLabel("Style:"))
         self.style_combo = QComboBox()
         self.style_combo.addItems([
             "realistic", "artistic", "cartoon", "abstract", "vintage", "cyberpunk"
@@ -335,46 +335,46 @@ class ImageGeneratorApp(QMainWindow):
         layout.addWidget(self.style_combo)
         
         # Качество
-        layout.addWidget(QLabel("Качество:"))
+        layout.addWidget(QLabel("Quality:"))
         self.quality_combo = QComboBox()
         self.quality_combo.addItems(["standard", "hd", "4k"])
         layout.addWidget(self.quality_combo)
         
         # Фильтры безопасности
-        layout.addWidget(QLabel("🔍 Фильтры безопасности:"))
+        layout.addWidget(QLabel("Safety filters:"))
         
         self.filters = {}
-        self.filters['nsfw'] = QCheckBox("Блокировать NSFW контент")
+        self.filters['nsfw'] = QCheckBox("Block NSFW content")
         self.filters['nsfw'].setChecked(True)
         layout.addWidget(self.filters['nsfw'])
         
-        self.filters['violence'] = QCheckBox("Блокировать насилие")
+        self.filters['violence'] = QCheckBox("Block violence")
         self.filters['violence'].setChecked(True)
         layout.addWidget(self.filters['violence'])
         
-        self.filters['hate'] = QCheckBox("Блокировать ненавистный контент")
+        self.filters['hate'] = QCheckBox("Block hateful content")
         self.filters['hate'].setChecked(True)
         layout.addWidget(self.filters['hate'])
         
-        self.filters['illegal'] = QCheckBox("Блокировать незаконный контент")
+        self.filters['illegal'] = QCheckBox("Block illegal content")
         self.filters['illegal'].setChecked(True)
         layout.addWidget(self.filters['illegal'])
         
         layout.addSpacing(20)
         
         # Кнопки
-        self.generate_btn = QPushButton("🚀 Сгенерировать изображение")
+        self.generate_btn = QPushButton("Generate image")
         self.generate_btn.setFont(QFont('Arial', 11, QFont.Bold))
         self.generate_btn.setMinimumHeight(45)
         self.generate_btn.clicked.connect(self.generate_image)
         layout.addWidget(self.generate_btn)
         
-        self.clear_btn = QPushButton("↺ Очистить")
+        self.clear_btn = QPushButton("Clear")
         self.clear_btn.setMinimumHeight(40)
         self.clear_btn.clicked.connect(self.clear_all)
         layout.addWidget(self.clear_btn)
         
-        self.download_btn = QPushButton("⬇️ Скачать изображение")
+        self.download_btn = QPushButton("Save image")
         self.download_btn.setMinimumHeight(40)
         self.download_btn.clicked.connect(self.download_image)
         self.download_btn.setEnabled(False)
@@ -383,7 +383,7 @@ class ImageGeneratorApp(QMainWindow):
         layout.addStretch()
         
         # Инфо
-        info = QLabel("v1.0 - Безопасная генерация изображений")
+        info = QLabel("v1.0 - Safe image generation demo")
         info.setStyleSheet("color: #64748b; font-size: 11px;")
         layout.addWidget(info)
         
@@ -395,7 +395,7 @@ class ImageGeneratorApp(QMainWindow):
         layout = QVBoxLayout(frame)
         layout.setSpacing(10)
         
-        title = QLabel("📸 Результат")
+        title = QLabel("Result")
         title.setFont(QFont('Arial', 14, QFont.Bold))
         layout.addWidget(title)
         
@@ -407,7 +407,7 @@ class ImageGeneratorApp(QMainWindow):
             "background: rgba(15, 23, 42, 0.6);"
         )
         self.preview_label.setAlignment(Qt.AlignCenter)
-        self.preview_label.setText("🖼️\n\nЗдесь появится ваше изображение")
+        self.preview_label.setText("Your image will appear here")
         layout.addWidget(self.preview_label)
         
         # Прогресс
@@ -428,7 +428,7 @@ class ImageGeneratorApp(QMainWindow):
         prompt = self.prompt_input.toPlainText().strip()
         
         if not prompt:
-            self.show_error("Пожалуйста, напишите описание изображения")
+            self.show_error("Please enter an image prompt")
             return
         
         # Проверка безопасности
@@ -469,13 +469,13 @@ class ImageGeneratorApp(QMainWindow):
         self.generate_btn.setEnabled(True)
         self.progress_bar.setVisible(False)
         
-        self.show_success("✅ Изображение успешно сгенерировано!")
+        self.show_success("Image generated successfully!")
     
     def on_generation_error(self, error_msg):
         """Обработка ошибки генерации"""
         self.generate_btn.setEnabled(True)
         self.progress_bar.setVisible(False)
-        self.show_error(f"❌ {error_msg}")
+        self.show_error(error_msg)
     
     def update_status(self, message):
         """Обновление статуса"""
@@ -488,18 +488,18 @@ class ImageGeneratorApp(QMainWindow):
         
         file_dialog = QFileDialog()
         file_path, _ = file_dialog.getSaveFileName(
-            self, "Сохранить изображение", "", "PNG (*.png);;JPG (*.jpg)"
+            self, "Save image", "", "PNG (*.png);;JPG (*.jpg)"
         )
         
         if file_path:
             import shutil
             shutil.copy(self.current_image, file_path)
-            self.show_success(f"✅ Изображение сохранено: {file_path}")
+            self.show_success(f"Image saved: {file_path}")
     
     def clear_all(self):
         """Очистка всех данных"""
         self.prompt_input.clear()
-        self.preview_label.setText("🖼️\n\nЗдесь появится ваше изображение")
+        self.preview_label.setText("Your image will appear here")
         self.preview_label.setPixmap(QPixmap())
         self.status_label.clear()
         self.download_btn.setEnabled(False)

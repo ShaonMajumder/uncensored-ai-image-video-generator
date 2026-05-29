@@ -6,6 +6,13 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+models/
+outputs/
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

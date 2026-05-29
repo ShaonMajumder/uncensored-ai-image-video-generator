@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "6080:6080"
+    environment:
+      APP_FILE: /app/unsensored_image_and_video_generator_ai_advanced.py
+      SCREEN_WIDTH: "1280"
+      SCREEN_HEIGHT: "800"
+      HF_HOME: /home/appuser/.cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /home/appuser/.cache/huggingface/hub
+    volumes:
+      - ./outputs:/home/appuser/Pictures/ImageGenerator
+      - huggingface-cache:/home/appuser/.cache/huggingface
+    shm_size: "2gb"
+
+volumes:
+  huggingface-cache:
