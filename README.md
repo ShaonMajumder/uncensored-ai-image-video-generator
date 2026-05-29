@@ -9,12 +9,27 @@ This repository currently contains two desktop apps:
 
 The Docker setup runs the advanced Diffusers app by default and exposes the desktop UI in your browser through noVNC.
 
+## Current Maintenance Notes
+
+Recent project updates:
+
+- The desktop UI text was translated and normalized to English.
+- The advanced app now launches generation through `generate_image_cli.py`, so the PyQt UI stays separate from the memory-heavy Diffusers process.
+- Local Windows generation was verified with Python 3.11, PyTorch `2.9.0+cu126`, Diffusers `0.35.2`, Transformers `4.57.6`, and Hugging Face Hub `0.36.2`.
+- A low-VRAM CUDA GPU path is handled explicitly. GPUs under 6 GB VRAM use CPU by default for stable output unless `SD_ALLOW_LOW_VRAM_CUDA=1` is set.
+- Cached Hugging Face model files are reused from `./models/huggingface/hub`, and generated files are written to `./outputs`.
+
+The repository intentionally ignores local model cache and generated images:
+
+- `models/`
+- `outputs/`
+
 ## Verified Project Claims
 
 Supported by the current code:
 
 - Text-to-image generation in the advanced app.
-- Local image file output under the user's `Pictures/ImageGenerator` directory, mapped to `./outputs` when using Docker Compose.
+- Local image file output under `./outputs`.
 - Prompt keyword safety checkboxes in the UI.
 - Docker-based local workflow.
 
@@ -46,19 +61,28 @@ The advanced app flow is:
 
 1. The PyQt UI collects a text prompt and a quality setting.
 2. The selected safety checkboxes run a simple keyword match against the prompt.
-3. On Generate, the app imports `diffusers` and `torch`.
-4. It selects a Stable Diffusion model:
+3. On Generate, the app starts `generate_image_cli.py` as an isolated subprocess.
+4. The CLI imports `diffusers` and `torch`, then selects a Stable Diffusion model:
    - `standard` and `hd`: `stable-diffusion-v1-5/stable-diffusion-v1-5`
    - `4k`: `stabilityai/stable-diffusion-2-1`
-5. Diffusers downloads the model into the Hugging Face cache on first use.
-6. PyTorch runs the denoising pipeline on CPU in the provided Docker image.
-7. The generated PNG is saved to `Pictures/ImageGenerator`.
+5. Diffusers downloads missing model files into `./models/huggingface/hub` on first use.
+6. If the model files are already cached, the app loads them locally and skips the Hugging Face network probe.
+7. PyTorch runs the denoising pipeline on CUDA when available and allowed, otherwise on CPU.
+8. The generated PNG is saved to `./outputs`.
 
 You can override the models with environment variables:
 
 - `SD_MODEL_STANDARD`
 - `SD_MODEL_HD`
 - `SD_MODEL_4K`
+
+Useful runtime environment variables:
+
+- `SD_DEVICE=cpu` - force CPU generation.
+- `SD_ALLOW_LOW_VRAM_CUDA=1` - try CUDA even on GPUs under 6 GB VRAM.
+- `SD_MODEL_VARIANT=none` - use the default model variant instead of `fp16`.
+- `SD_STEPS=15` - override the number of inference steps.
+- `SD_GUIDANCE_SCALE=7.5` - override guidance scale.
 
 ## Run With Docker
 
@@ -110,4 +134,15 @@ python -m pip install -r requirements.txt
 python .\unsensored_image_and_video_generator_ai_advanced.py
 ```
 
-The first AI generation run downloads the selected Stable Diffusion model, so keep the terminal open and expect it to take time. The included `requirements.txt` installs a CPU-only PyTorch build. If you want GPU acceleration, install the PyTorch build that matches your CUDA setup before running the app.
+The first AI generation run downloads the selected Stable Diffusion model, so keep the terminal open and expect it to take time. The current `requirements.txt` uses the PyTorch CUDA 12.6 wheel index, but CUDA can still be disabled automatically when the detected GPU has too little VRAM for stable generation.
+
+## Future Updates
+
+Planned or useful next improvements:
+
+- Add a clearer first-run model download progress screen.
+- Add a model manager for choosing and validating local Stable Diffusion checkpoints.
+- Add a true CPU-only requirements file for machines without CUDA.
+- Improve generation cancellation and cleanup from the UI.
+- Add tests around model selection, cache detection, and safety-filter behavior.
+- Replace the placeholder/demo app or clearly separate it from the Diffusers app.
