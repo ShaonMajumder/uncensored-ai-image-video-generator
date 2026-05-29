@@ -1,5 +1,3 @@
-<img width="1672" height="941" alt="c9937406-2639-4f89-87b6-d501b6d0f2cd" src="https://github.com/user-attachments/assets/ade7fde2-3866-4c12-99b1-5a930fcb9bff" />
-
 # uncensored-ai-image-video-generator
 
 An easy-to-use AI-powered image and video generation tool designed for Windows.  
